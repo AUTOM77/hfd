@@ -1,0 +1,14 @@
+[workspace]
+members = ["hfd-cli"]
+resolver = "2"
+
+[profile.release]
+lto = true
+strip = true
+panic = 'abort'
+opt-level = 3
+codegen-units = 1
+
+[profile.bench]
+lto = true
+codegen-units = 1
