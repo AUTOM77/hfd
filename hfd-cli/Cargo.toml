@@ -1,12 +1,12 @@
 [package]
 name = "hfd-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
 tokio = { version = "1.37.0", features = ["full"] }
 clap = { version= "4.5.4", features=["derive"] }
-hf-hub ={ version="0.3.2", features = ["tokio"]}
+hf-hub ={ version="0.3.2", features = ["tokio", "rustls-tls"], default-features = false }
 
 [[bin]]
 name = "hfd"
