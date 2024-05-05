@@ -1,9 +1,11 @@
 use tokio;
-// use tokio_stream::StreamExt;
 
 #[tokio::main]
 async fn main() {
-    let api = libhfd::api::tokio::Api::new().unwrap();
+    let _build = libhfd::api::tokio::ApiBuilder::new();
+    let api = _build.with_endpoint("https://hf-mirror.com")
+        .build()
+        .unwrap();
 
     let _filename = api
         .model("ByteDance/Hyper-SD".to_string())

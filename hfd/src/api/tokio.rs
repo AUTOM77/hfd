@@ -86,7 +86,7 @@ impl ApiBuilder {
         let progress = true;
 
         Self {
-            endpoint: "https://hf-mirror.com".to_string(),
+            endpoint: "https://huggingface.co".to_string(),
             url_template: "{endpoint}/{repo_id}/resolve/{revision}/{filename}".to_string(),
             cache,
             token,
@@ -96,6 +96,11 @@ impl ApiBuilder {
             max_retries: 0,
             progress,
         }
+    }
+
+    pub fn with_endpoint(mut self, endpoint: &str) -> Self {
+        self.endpoint = endpoint.to_string();
+        self
     }
 
     pub fn with_progress(mut self, progress: bool) -> Self {
@@ -108,8 +113,8 @@ impl ApiBuilder {
         self
     }
 
-    pub fn with_token(mut self, token: Option<String>) -> Self {
-        self.token = token;
+    pub fn with_token(mut self, token: &str) -> Self {
+        self.token = Some(token.to_string());
         self
     }
 
