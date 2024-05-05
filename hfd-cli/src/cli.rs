@@ -2,7 +2,7 @@ use tokio;
 
 #[tokio::main]
 async fn main() {
-    let api = hf_hub::api::tokio::Api::new().unwrap();
+    let api = libhfd::api::tokio::Api::new().unwrap();
 
     let _filename = api
         .model("meta-llama/Llama-2-7b-hf".to_string())
