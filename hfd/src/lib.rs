@@ -35,7 +35,7 @@ impl Cache {
     pub fn token(&self) -> Option<String> {
         let token_filename = self.token_path();
         if !token_filename.exists() {
-            log::info!("Token file not found {token_filename:?}");
+            eprintln!("Token file not found {token_filename:?}");
         }
         match std::fs::read_to_string(token_filename) {
             Ok(token_content) => {
