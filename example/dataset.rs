@@ -3,6 +3,8 @@ use tokio_stream::StreamExt;
 
 #[tokio::main]
 async fn main() {
+    let start_time = std::time::Instant::now();
+
     let nums: Vec<Vec<u32>> = (0..204)
         .collect::<Vec<_>>()
         .chunks(10)
@@ -12,8 +14,8 @@ async fn main() {
     for chunk in nums{
         let mut tasks: Vec<_> = chunk.into_iter()
             .map(|i| tokio::spawn(async move {
-                let _build = libhfd::api::tokio::ApiBuilder::new();
-                let api = _build.with_endpoint("https://hf-mirror.com")
+                let api = libhfd::api::tokio::ApiBuilder::new()
+                    .with_endpoint("https://hf-mirror.com")
                     .with_token("hf_xxxxxxxx")
                     .build()
                     .unwrap();
@@ -28,4 +30,6 @@ async fn main() {
             task.await.unwrap();
         }
     }
+
+    println!("Processing time: {:?}", start_time.elapsed());
 }
