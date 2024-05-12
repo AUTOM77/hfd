@@ -88,10 +88,9 @@ async fn download_chunk(
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let client= reqwest::Client::builder()
             .default_headers(headers.clone())
-            .pool_idle_timeout(Duration::from_millis(50))
-            .pool_max_idle_per_host(2)
-            .timeout(Duration::from_secs(30))
-            .build()?;
+            .pool_idle_timeout(Duration::from_secs(10))
+            .http2_keep_alive_timeout(Duration::from_secs(30)).build()?;
+
         let range = format!("bytes={s}-{e}");
 
         let response = client.get(url).header(RANGE, range).send().await?;
@@ -112,8 +111,6 @@ async fn download(
         path: PathBuf, 
         chunk_size: usize
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // let url = self.hf_url.path(&file);
-        // let path = self.root.join(&file);
         let client = reqwest::Client::builder()
             .default_headers(headers.clone())
             .http2_keep_alive_timeout(Duration::from_secs(15)).build()?;
@@ -127,7 +124,10 @@ async fn download(
             .and_then(|s| s.parse().ok())
             .ok_or("Failed to parse size")?;
         
-        let _ = tokio::fs::File::create(&path).await?.set_len(length as u64).await?;
+        tokio::fs::File::create(&path)
+            .await?
+            .set_len(length as u64)
+            .await?;
 
         let tasks: Vec<_> = (0..length)
             .into_iter()
@@ -238,7 +238,7 @@ impl HfClient {
 }
 
 pub fn _rt(_url: &str, _token: Option<&str>, _dir: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
-    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     let hfc = HfClient::build(_url)?
         .apply_token(_token)
         .apply_root(_dir);
