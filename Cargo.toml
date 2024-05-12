@@ -1,5 +1,6 @@
 [workspace]
-members = ["hfd", "hfd-cli"]
+# members = ["hfd", "hfd-cli"]
+members = ["hfd-cli"]
 resolver = "2"
 
 [profile.release]

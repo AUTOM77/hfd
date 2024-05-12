@@ -1,16 +1,33 @@
-use tokio;
-// use tokio_stream::StreamExt;
+use clap::{Args, Parser};
+use hfd_cli::_rt;
 
-#[tokio::main]
-async fn main() {
+#[derive(Args)]
+#[group(required = false, multiple = true)]
+struct Opts {
+    #[arg(short = 't', long, name = "TOKEN")]
+    token: Option<String>,
+
+    #[arg(short = 'd', long, name = "DIR", help = "Save it to `$DIR` or `.` ")]
+    dir: Option<String>,
+    #[arg(short = 'm', long, name = "MIRROR", help = "Not yet applied")]
+    mirror: Option<String>,
+    #[arg(short = 'p', long, name = "PROXY", help = "Not yet applied")]
+    proxy: Option<String>,
+}
+
+#[derive(Parser)]
+struct Cli {
+    url: String,
+
+    #[command(flatten)]
+    opt: Opts,
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start_time = std::time::Instant::now();
 
-    let api = libhfd::api::tokio::Api::new().unwrap();
-
-    let _filename = api
-        .model("ByteDance/Hyper-SD".to_string())
-        .get("Hyper-SDXL-8steps-lora.safetensors")
-        .await
-        .unwrap();
+    let cli = Cli::parse();
+    let _ = _rt(&cli.url, cli.opt.token.as_deref(), cli.opt.dir.as_deref());
     println!("Processing time: {:?}", start_time.elapsed());
+    Ok(())
 }

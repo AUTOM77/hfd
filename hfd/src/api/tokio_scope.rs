@@ -16,7 +16,6 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio::io::{AsyncSeekExt, AsyncWriteExt, SeekFrom};
 use tokio::sync::{AcquireError, Semaphore, TryAcquireError};
-use tokio_stream::StreamExt;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -67,12 +66,6 @@ pub struct ApiBuilder {
     parallel_failures: usize,
     max_retries: usize,
     progress: bool,
-}
-
-impl Default for ApiBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl ApiBuilder {
@@ -152,13 +145,14 @@ impl ApiBuilder {
 
         let relative_redirect_client = Client::builder()
             .redirect(relative_redirect_policy)
-            .default_headers(headers)
+            .default_headers(headers.clone())
             .build()?;
         Ok(Api {
             endpoint: self.endpoint,
             url_template: self.url_template,
             cache: self.cache,
             client,
+            headers,
             relative_redirect_client,
             max_files: self.max_files,
             chunk_size: self.chunk_size,
@@ -182,6 +176,7 @@ pub struct Api {
     url_template: String,
     cache: Cache,
     client: Client,
+    headers: HeaderMap,
     relative_redirect_client: Client,
     max_files: usize,
     chunk_size: usize,
@@ -373,7 +368,8 @@ impl ApiRepo {
         for start in (0..length).step_by(chunk_size) {
             let url = url.to_string();
             let filename = filename.clone();
-            let client = self.api.client.clone();
+            let headers = self.api.headers.clone();
+            // let client = self.api.client.clone();
 
             let stop = std::cmp::min(start + chunk_size - 1, length);
             let permit = semaphore.clone().acquire_owned().await?;
@@ -382,7 +378,7 @@ impl ApiRepo {
             let parallel_failures_semaphore = parallel_failures_semaphore.clone();
             let progress = progressbar.clone();
             handles.push(tokio::spawn(async move {
-                let mut chunk = Self::download_chunk(&client, &url, &filename, start, stop).await;
+                let mut chunk = Self::download_chunk(&headers, &url, &filename, start, stop).await;
                 let mut i = 0;
                 if parallel_failures > 0 {
                     while let Err(dlerr) = chunk {
@@ -393,7 +389,7 @@ impl ApiRepo {
                         tokio::time::sleep(tokio::time::Duration::from_millis(wait_time as u64))
                             .await;
 
-                        chunk = Self::download_chunk(&client, &url, &filename, start, stop).await;
+                        chunk = Self::download_chunk(&headers, &url, &filename, start, stop).await;
                         i += 1;
                         if i > max_retries {
                             return Err(ApiError::TooManyRetries(dlerr.into()));
@@ -420,14 +416,14 @@ impl ApiRepo {
     }
 
     async fn download_chunk(
-        client: &reqwest::Client,
+        headers: &HeaderMap,
         url: &str,
         filename: &PathBuf,
         start: usize,
         stop: usize,
     ) -> Result<(), ApiError> {
+        let client = Client::builder().default_headers(headers.clone()).build()?;
         let range = format!("bytes={start}-{stop}");
-
         let mut file = tokio::fs::OpenOptions::new()
             .write(true)
             .open(filename)
@@ -437,14 +433,10 @@ impl ApiRepo {
             .get(url)
             .header(RANGE, range)
             .send()
-            .await?;
-
-        let mut stream = response.bytes_stream();
-        while let Some(chunk) = stream.next().await {
-            let chunk = chunk?;
-            tokio::io::copy(&mut chunk.as_ref(), &mut file).await?;
-        }
-
+            .await?
+            .error_for_status()?;
+        let content = response.bytes().await?;
+        file.write_all(&content).await?;
         Ok(())
     }
 

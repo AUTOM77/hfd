@@ -9,7 +9,7 @@ async fn main() {
 
     let _filename = api
         .model("ByteDance/Hyper-SD".to_string())
-        .get("Hyper-SDXL-8steps-lora.safetensors")
+        .get("Hyper-SDXL-1step-Unet-Comfyui.fp16.safetensors")
         .await
         .unwrap();
 }

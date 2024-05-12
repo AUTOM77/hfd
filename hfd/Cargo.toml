@@ -4,15 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1.37.0", features = ["full"] }
-reqwest = { version = "0.12.4", default-features = false, features = ["json", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
+tokio = { version = "1.37.0", default-features = false, features = ["rt", "fs"] }
+reqwest = { version = "0.12.4", default-features = false, features = ["stream", "json", "charset", "http2", "macos-system-configuration", "rustls-tls"] }
 indicatif = { version = "0.17.8" }
 serde = { version = "1.0.200", features = ["derive"] }
 serde_json = { version = "1.0.116" }
 
+tokio-stream = "0.1.15"
 futures = "0.3.30"
 thiserror = "1.0.59"
-dirs = "5.0.1"
 rand = "0.8.5"
 num_cpus = "1.16.0"
 
