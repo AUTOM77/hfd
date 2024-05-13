@@ -105,6 +105,36 @@ async fn download_chunk(
     Ok(())
 }
 
+async fn download_chunk_with_retry(
+    headers: HeaderMap,
+    url: String,
+    path: PathBuf,
+    s: usize,
+    e: usize,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    const MAX_RETRIES: usize = 100;
+    let mut retries = 0;
+
+    let mut error: Option<Box<dyn std::error::Error + Send + Sync>> = None;
+
+    while retries < MAX_RETRIES {
+        match download_chunk(headers.clone(), url.clone(), path.clone(), s, e).await {
+            Ok(_) => return Ok(()),
+            Err(e) => {
+                println!("Retry {:#?} with {:?} times", e, retries);
+                error = Some(e);
+                retries += 1;
+                std::thread::sleep(Duration::from_millis(10));
+            }
+        }
+    }
+
+    Err(error.unwrap_or_else(|| Box::new(std::io::Error::new(
+        std::io::ErrorKind::Other,
+        "Exhausted all retries",
+    ))))
+}
+
 async fn download(
         headers: HeaderMap,
         url: String,
@@ -135,14 +165,20 @@ async fn download(
 
         for s in (0..length).step_by(chunk_size) {
             let e = std::cmp::min(s + chunk_size - 1, length);
-            tasks.push(download_chunk(headers.clone(), url.clone(), path.clone(), s, e));
+            tasks.push(download_chunk_with_retry(headers.clone(), url.clone(), path.clone(), s, e));
         }
 
         while let Some(handle) = tasks.next().await {
             let res = match handle {
-                    Ok(socket) => socket,
-                    Err(e) => println!("{:?}", e),
-                };
+                Ok(socket) => {
+                    socket
+                },
+                Err(e) => {
+                    println!("Chunk Error {:#?}", e);
+                    std::thread::sleep(Duration::from_millis(10));
+                    continue;
+                }
+            };
         }
         Ok(())
 }
@@ -235,9 +271,13 @@ impl HfClient {
 
             while let Some(handle) = tasks.next().await {
                 let res = match handle {
-                        Ok(socket) => socket,
-                        Err(e) => println!("{:?}", e),
-                    };
+                    Ok(socket) => socket,
+                    Err(e) => {
+                        println!("File Error {:#?}", e);
+                        std::thread::sleep(Duration::from_millis(10));
+                        continue;
+                    }
+                };
             }
         }
         Ok(())

@@ -59,8 +59,10 @@ EOF
 bench:
 v0.2.6 Processing time: 4457.868372796s
 v0.2.7 Processing time: 4441.127406732s
+v0.2.8 Processing time: 4650.917674426s
 
 - https://github.com/hyperium/hyper/issues/1358
 - https://github.com/hyperium/hyper/issues/1358#issuecomment-366550636
+- https://gist.github.com/klausi/f94b9aff7d36a1cb4ebbca746f0a099f
 - https://gist.github.com/mustafaturan/47268d8ad6d56cadda357e4c438f51ca
 
