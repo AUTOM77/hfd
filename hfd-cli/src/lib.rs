@@ -88,7 +88,7 @@ async fn download_chunk(
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let client= reqwest::Client::builder()
             .default_headers(headers.clone())
-            .pool_max_idle_per_host(0)
+            .pool_idle_timeout(Duration::from_secs(1))
             .build()?;
 
         let range = format!("bytes={s}-{e}");
@@ -113,7 +113,7 @@ async fn download(
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let client = reqwest::Client::builder()
             .default_headers(headers.clone())
-            .pool_max_idle_per_host(0)
+            .pool_idle_timeout(Duration::from_secs(1))
             .build()?;
 
         let response = client.get(&url).header(RANGE, "bytes=0-0").send().await?;
@@ -185,7 +185,7 @@ impl HfClient {
 
     async fn list_files(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
         let client = reqwest::Client::builder()
-            .pool_max_idle_per_host(0)
+            .pool_idle_timeout(Duration::from_secs(1))
             .build()?;
         let api = self.hf_url.api();
         let response = client.get(api)
