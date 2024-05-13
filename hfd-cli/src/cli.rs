@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start_time = std::time::Instant::now();
 
     let cli = Cli::parse();
-    let _ = _rt(&cli.url, cli.opt.token.as_deref(), cli.opt.dir.as_deref());
+    let _ = _rt(&cli.url, cli.opt.token.as_deref(), cli.opt.dir.as_deref(), cli.opt.mirror.as_deref());
     println!("Processing time: {:?}", start_time.elapsed());
     Ok(())
 }

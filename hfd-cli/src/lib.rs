@@ -179,6 +179,13 @@ impl HfClient {
         self
     }
 
+    pub fn apply_endpoint(mut self, _endpoint: Option<&str>) -> Self{
+        if let Some(ep) = _endpoint {
+            self.hf_url = self.hf_url.with_endpoint(ep);
+        }
+        self
+    }
+
     async fn list_files(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
         let client = reqwest::Client::builder()
             .pool_idle_timeout(Duration::from_secs(1))
@@ -238,11 +245,12 @@ impl HfClient {
     }
 }
 
-pub fn _rt(_url: &str, _token: Option<&str>, _dir: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn _rt(_url: &str, _token: Option<&str>, _dir: Option<&str>, _mir: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     let hfc = HfClient::build(_url)?
         .apply_token(_token)
-        .apply_root(_dir);
+        .apply_root(_dir)
+        .apply_endpoint(_mir);
 
     let _ = rt.block_on(hfc.download_all());
     Ok(())
