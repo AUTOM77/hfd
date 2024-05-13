@@ -13,22 +13,24 @@
 
 🎈Rust-based interface for Huggingface 🤗 download.
 
-- For public
+```sh
+# Download entire public hf repo
+./hdf https://huggingface.co/deepseek-ai/DeepSeek-V2
 
-`./hdf https://huggingface.co/deepseek-ai/DeepSeek-V2`
+# Download gated public hf repo with token
 
-- For Gated with token
-`./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx`
+./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx
 
-- For Custom Save path
-`./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm`
+# Download gated public hf repo with token and save to /data/llm
+./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm
 
-- Download with mirror
-`./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm -m hf-mirror.com`
+# Sometimes, use mirror, for example, hf-mirror.com
+./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm -m hf-mirror.com
+```
 
 For a more convinent user experience, execute:
 
-```bash
+```sh
 cat <<EOF | sudo tee -a /etc/security/limits.conf
 root soft nofile 20000000
 root hard nofile 20000000
