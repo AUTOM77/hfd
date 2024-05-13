@@ -56,4 +56,10 @@ fs.nr_open = 20000500
 EOF
 ```
 
+bench:
+v0.2.6 Processing time: 4457.868372796s
+v0.2.7 Processing time: 4441.127406732s
+
+
 - https://gist.github.com/mustafaturan/47268d8ad6d56cadda357e4c438f51ca
+

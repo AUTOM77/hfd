@@ -80,9 +80,9 @@ pub struct HfClient {
 }
 
 async fn download_chunk(
-        headers: &HeaderMap,
-        url: &str,
-        path: &PathBuf, 
+        headers: HeaderMap,
+        url: String,
+        path: PathBuf, 
         s: usize, 
         e: usize
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -93,7 +93,7 @@ async fn download_chunk(
 
         let range = format!("bytes={s}-{e}");
 
-        let response = client.get(url).header(RANGE, range).send().await?;
+        let response = client.get(&url).header(RANGE, range).send().await?;
         let mut stream = response.bytes_stream();
 
         let mut file = tokio::fs::OpenOptions::new().write(true).open(path).await?;
@@ -111,9 +111,6 @@ async fn download(
         path: PathBuf, 
         chunk_size: usize
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let handle = tokio::runtime::Handle::current();
-        let mut tasks = futures::stream::FuturesUnordered::new();
-
         let client = reqwest::Client::builder()
             .default_headers(headers.clone())
             .pool_max_idle_per_host(0)
@@ -133,12 +130,12 @@ async fn download(
             .set_len(length as u64)
             .await?;
 
+        // download
+        let mut tasks = futures::stream::FuturesUnordered::new();
+
         for s in (0..length).step_by(chunk_size) {
-            let _url = url.clone();
-            let _path = path.clone();
-            let headers = headers.clone();
             let e = std::cmp::min(s + chunk_size - 1, length);
-            tasks.push(handle.spawn(async move { download_chunk(&headers, &_url, &_path, s, e).await }));
+            tasks.push(download_chunk(headers.clone(), url.clone(), path.clone(), s, e));
         }
 
         while let Some(handle) = tasks.next().await {
@@ -223,20 +220,18 @@ impl HfClient {
         let files = self.list_files().await?;
         let _ = self.create_dir_all(files.clone());
 
+        // download_all
         for chunks in files.chunks(50){
-            let mut tasks = Vec::new();
-
+            let mut tasks = futures::stream::FuturesUnordered::new();
             for file in chunks{
                 let url = self.hf_url.path(&file);
                 let path = self.root.join(&file);
                 let headers = self.headers.clone();
-                tasks.push(tokio::spawn(async move {
-                    download(headers, url, path, CHUNK_SIZE).await;
-                }));
+                tasks.push(download(headers, url, path, CHUNK_SIZE));
             }
 
-            for task in tasks {
-                task.await.unwrap();
+            while let Some(task) = tasks.next().await {
+                task.unwrap();
             }
         }
         Ok(())
