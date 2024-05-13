@@ -13,11 +13,11 @@
 
 🎈Rust-based interface for Huggingface 🤗 download.
 
-- For public, 
+- For public
 
 `./hdf https://huggingface.co/deepseek-ai/DeepSeek-V2`
 
-- For Gated
+- For Gated with token
 `./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx`
 
 - For Custom Save path
