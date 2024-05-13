@@ -222,7 +222,10 @@ impl HfClient {
             let url = self.hf_url.path(&file);
             let path = self.root.join(&file);
             let headers = self.headers.clone();
-            tasks.push(tokio::spawn(async move { download(headers, url, path, CHUNK_SIZE).await; }));
+            tasks.push(tokio::spawn(async move { 
+                download(headers, url, path, CHUNK_SIZE).await;
+                std::thread::sleep(Duration::from_millis(10));
+            }));
         }
 
         for task in tasks {
