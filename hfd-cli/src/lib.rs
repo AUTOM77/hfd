@@ -213,24 +213,26 @@ impl HfClient {
     }
 
     pub async fn download_all(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let mut tasks = Vec::new();
-
         let files = self.list_files().await?;
         let _ = self.create_dir_all(files.clone());
 
-        for file in files{
-            let url = self.hf_url.path(&file);
-            let path = self.root.join(&file);
-            let headers = self.headers.clone();
-            tasks.push(tokio::spawn(async move { 
-                download(headers, url, path, CHUNK_SIZE).await;
-                std::thread::sleep(Duration::from_millis(10));
-            }));
-        }
+        for chunks in files.chunks(50){
+            let mut tasks = Vec::new();
 
-        for task in tasks {
-            task.await.unwrap();
-            std::thread::sleep(Duration::from_millis(100));
+            for file in chunks{
+                let url = self.hf_url.path(&file);
+                let path = self.root.join(&file);
+                let headers = self.headers.clone();
+                tasks.push(tokio::spawn(async move {
+                    download(headers, url, path, CHUNK_SIZE).await;
+                    std::thread::sleep(Duration::from_millis(10));
+                }));
+            }
+
+            for task in tasks {
+                task.await.unwrap();
+                std::thread::sleep(Duration::from_millis(100));
+            }
         }
         Ok(())
     }
