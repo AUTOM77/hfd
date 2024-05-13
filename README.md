@@ -24,8 +24,10 @@
 # Download gated public hf repo with token and save to /data/llm
 ./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm
 
-# Sometimes, use mirror, for example, hf-mirror.com
+# Sometimes, use mirror, for example, hf-mirror.com. 
+# The following two options are feasible.
 ./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm -m hf-mirror.com
+./hdf https://hf-mirror.com/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm
 ```
 
 For a more convinent user experience, execute:
