@@ -232,13 +232,11 @@ impl HfClient {
                 let headers = self.headers.clone();
                 tasks.push(tokio::spawn(async move {
                     download(headers, url, path, CHUNK_SIZE).await;
-                    std::thread::sleep(Duration::from_millis(10));
                 }));
             }
 
             for task in tasks {
                 task.await.unwrap();
-                std::thread::sleep(Duration::from_millis(100));
             }
         }
         Ok(())
