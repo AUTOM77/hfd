@@ -139,7 +139,10 @@ async fn download(
         }
 
         while let Some(handle) = tasks.next().await {
-            handle.unwrap();
+            let res = match handle {
+                    Ok(socket) => socket,
+                    Err(e) => println!("{:?}", e),
+                };
         }
         Ok(())
 }
@@ -230,8 +233,11 @@ impl HfClient {
                 tasks.push(download(headers, url, path, CHUNK_SIZE));
             }
 
-            while let Some(task) = tasks.next().await {
-                task.unwrap();
+            while let Some(handle) = tasks.next().await {
+                let res = match handle {
+                        Ok(socket) => socket,
+                        Err(e) => println!("{:?}", e),
+                    };
             }
         }
         Ok(())
