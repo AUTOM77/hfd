@@ -230,6 +230,7 @@ impl HfClient {
 
         for task in tasks {
             task.await.unwrap();
+            std::thread::sleep(Duration::from_millis(100));
         }
         Ok(())
     }
