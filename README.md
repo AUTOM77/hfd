@@ -13,16 +13,17 @@
 
 🎈Rust-based interface for Huggingface 🤗 download.
 
-> For public, 
+- For public, 
+
 `./hdf https://huggingface.co/deepseek-ai/DeepSeek-V2`
 
-> For Gated
+- For Gated
 `./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx`
 
-> For Custom Save path
+- For Custom Save path
 `./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm`
 
-> Download with mirror
+- Download with mirror
 `./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx -d /data/llm -m hf-mirror.com`
 
 For a more convinent user experience, execute:
