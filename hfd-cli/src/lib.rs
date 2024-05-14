@@ -6,6 +6,7 @@ use tokio::io::{AsyncSeekExt, SeekFrom};
 use futures::StreamExt;
 
 const CHUNK_SIZE: usize = 100_000_000;
+const CHUNK_SIZE_XL: usize = 10_000_000_000;
 
 #[derive(Debug)]
 pub struct HfURL {
@@ -97,7 +98,7 @@ async fn download_chunk(
         let mut stream = response.bytes_stream();
 
         let mut file = tokio::fs::OpenOptions::new().write(true).open(path).await?;
-        file.seek(SeekFrom::Start(s as u64)).await?;    
+        file.seek(SeekFrom::Start(s as u64)).await?;
         while let Some(chunk) = stream.next().await {
             let chunk = chunk?;
             tokio::io::copy(&mut chunk.as_ref(), &mut file).await?;
@@ -266,7 +267,13 @@ impl HfClient {
                 let url = self.hf_url.path(&file);
                 let path = self.root.join(&file);
                 let headers = self.headers.clone();
-                tasks.push(download(headers, url, path, CHUNK_SIZE));
+                if self.hf_url.endpoint.contains("face"){
+                    tasks.push(download(headers, url, path, CHUNK_SIZE));
+                }
+                else {
+                    tasks.push(download(headers, url, path, CHUNK_SIZE_XL));
+                }
+                
             }
 
             while let Some(handle) = tasks.next().await {
