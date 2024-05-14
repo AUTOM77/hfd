@@ -257,9 +257,11 @@ impl HfClient {
     }
 
     pub async fn download_all(&self) -> Result<(), Box<dyn std::error::Error>> {
+        println!("Downloading...");
+
         let files = self.list_files().await?;
 
-        println!("Downloading for {:?}", files);
+        println!("Files: {:?}", files);
         let _ = self.create_dir_all(files.clone());
 
         // download_all
