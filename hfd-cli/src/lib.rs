@@ -258,6 +258,8 @@ impl HfClient {
 
     pub async fn download_all(&self) -> Result<(), Box<dyn std::error::Error>> {
         let files = self.list_files().await?;
+
+        println!("Downloading for {:?}", files);
         let _ = self.create_dir_all(files.clone());
 
         // download_all
@@ -273,7 +275,6 @@ impl HfClient {
                 else {
                     tasks.push(download(headers, url, path, CHUNK_SIZE_XL));
                 }
-                
             }
 
             while let Some(handle) = tasks.next().await {
