@@ -56,8 +56,7 @@ fs.nr_open = 20000500
 EOF
 ```
 
-bench:
-
+> [!Bench]
 > v0.2.6 Processing time: 4457.868372796s
 > v0.2.7 Processing time: 4441.127406732s
 > v0.2.8 Processing time: 4650.917674426s
