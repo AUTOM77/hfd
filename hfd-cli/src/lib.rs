@@ -87,22 +87,22 @@ async fn download_chunk(
         s: usize, 
         e: usize
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let client= reqwest::Client::builder()
-            .default_headers(headers.clone())
-            .pool_max_idle_per_host(0)
-            .build()?;
+    let client= reqwest::Client::builder()
+        .default_headers(headers.clone())
+        .pool_max_idle_per_host(0)
+        .build()?;
 
-        let range = format!("bytes={s}-{e}");
+    let range = format!("bytes={s}-{e}");
 
-        let response = client.get(&url).header(RANGE, range).send().await?;
-        let mut stream = response.bytes_stream();
+    let response = client.get(&url).header(RANGE, range).send().await?;
+    let mut stream = response.bytes_stream();
 
-        let mut file = tokio::fs::OpenOptions::new().write(true).open(path).await?;
-        file.seek(SeekFrom::Start(s as u64)).await?;
-        while let Some(chunk) = stream.next().await {
-            let chunk = chunk?;
-            tokio::io::copy(&mut chunk.as_ref(), &mut file).await?;
-        }
+    let mut file = tokio::fs::OpenOptions::new().write(true).open(path).await?;
+    file.seek(SeekFrom::Start(s as u64)).await?;
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        tokio::io::copy(&mut chunk.as_ref(), &mut file).await?;
+    }
     Ok(())
 }
 
@@ -125,7 +125,7 @@ async fn download_chunk_with_retry(
                 println!("Retry {:#?} with {:?} times", e, retries);
                 error = Some(e);
                 retries += 1;
-                std::thread::sleep(Duration::from_millis(10));
+                std::thread::sleep(Duration::from_millis(100));
             }
         }
     }
@@ -142,46 +142,45 @@ async fn download(
         path: PathBuf, 
         chunk_size: usize
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let client = reqwest::Client::builder()
-            .default_headers(headers.clone())
-            .pool_max_idle_per_host(0)
-            .build()?;
+    let client = reqwest::Client::builder()
+        .default_headers(headers.clone())
+        .pool_max_idle_per_host(0)
+        .build()?;
 
-        let response = client.get(&url).header(RANGE, "bytes=0-0").send().await?;
-        let length: usize = response
-            .headers()
-            .get(CONTENT_RANGE)
-            .ok_or("Content-Length not found")?
-            .to_str()?.rsplit('/').next()
-            .and_then(|s| s.parse().ok())
-            .ok_or("Failed to parse size")?;
-        
-        tokio::fs::File::create(&path)
-            .await?
-            .set_len(length as u64)
-            .await?;
+    let response = client.get(&url).header(RANGE, "bytes=0-0").send().await?;
+    let length: usize = response
+        .headers()
+        .get(CONTENT_RANGE)
+        .ok_or("Content-Length not found")?
+        .to_str()?.rsplit('/').next()
+        .and_then(|s| s.parse().ok())
+        .ok_or("Failed to parse size")?;
+    
+    tokio::fs::File::create(&path)
+        .await?
+        .set_len(length as u64)
+        .await?;
 
-        // download
-        let mut tasks = futures::stream::FuturesUnordered::new();
+    let mut tasks = futures::stream::FuturesUnordered::new();
 
-        for s in (0..length).step_by(chunk_size) {
-            let e = std::cmp::min(s + chunk_size - 1, length);
-            tasks.push(download_chunk_with_retry(headers.clone(), url.clone(), path.clone(), s, e));
-        }
+    for s in (0..length).step_by(chunk_size) {
+        let e = std::cmp::min(s + chunk_size - 1, length);
+        tasks.push(download_chunk_with_retry(headers.clone(), url.clone(), path.clone(), s, e));
+    }
 
-        while let Some(handle) = tasks.next().await {
-            let res = match handle {
-                Ok(socket) => {
-                    socket
-                },
-                Err(e) => {
-                    println!("Chunk Error {:#?}", e);
-                    std::thread::sleep(Duration::from_millis(10));
-                    continue;
-                }
-            };
-        }
-        Ok(())
+    while let Some(handle) = tasks.next().await {
+        let res = match handle {
+            Ok(socket) => {
+                socket
+            },
+            Err(e) => {
+                println!("Chunk Error {:#?}", e);
+                std::thread::sleep(Duration::from_millis(10));
+                continue;
+            }
+        };
+    }
+    Ok(())
 }
 
 impl HfClient {
@@ -264,8 +263,7 @@ impl HfClient {
         println!("Files: {:?}", files);
         let _ = self.create_dir_all(files.clone());
 
-        // download_all
-        for chunks in files.chunks(50){
+        for chunks in files.chunks(10){
             let mut tasks = futures::stream::FuturesUnordered::new();
             for file in chunks{
                 let url = self.hf_url.path(&file);
