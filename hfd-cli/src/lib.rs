@@ -125,7 +125,7 @@ async fn download_chunk_with_retry(
                 println!("Retry {:#?} with {:?} times", e, retries);
                 error = Some(e);
                 retries += 1;
-                std::thread::sleep(Duration::from_millis(100));
+                std::thread::sleep(Duration::from_secs(10));
             }
         }
     }
@@ -263,7 +263,7 @@ impl HfClient {
         println!("Files: {:?}", files);
         let _ = self.create_dir_all(files.clone());
 
-        for chunks in files.chunks(10){
+        for chunks in files.chunks(5){
             let mut tasks = futures::stream::FuturesUnordered::new();
             for file in chunks{
                 let url = self.hf_url.path(&file);
