@@ -17,8 +17,10 @@
 # Download entire public hf repo
 ./hdf https://huggingface.co/deepseek-ai/DeepSeek-V2
 
-# Download gated public hf repo with token
+# Download public hf repo with limit num
+./hdf https://huggingface.co/microsoft/Florence-2-large -n 10
 
+# Download gated public hf repo with token
 ./hdf https://huggingface.co/meta-llama/Meta-Llama-3-70B -t hf_xxxxxxxxxx
 
 # Download gated public hf repo with token and save to /data/llm

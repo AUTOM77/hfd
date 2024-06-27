@@ -255,12 +255,13 @@ impl HfClient {
         Ok(())
     }
 
-    pub async fn download_all(&self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Downloading...");
+    pub async fn download_all(&self, limit: Option<usize>) -> Result<(), Box<dyn std::error::Error>> {
+        let files_all = self.list_files().await?;
+        let total_file = files_all.len();
 
-        let files = self.list_files().await?;
+        let num = limit.unwrap_or(total_file);
+        let files: Vec<_> = files_all.into_iter().take(num).collect();
 
-        println!("Files: {:?}", files);
         let _ = self.create_dir_all(files.clone());
 
         for chunks in files.chunks(5){
@@ -292,13 +293,25 @@ impl HfClient {
     }
 }
 
-pub fn _rt(_url: &str, _token: Option<&str>, _dir: Option<&str>, _mir: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
-    let hfc = HfClient::build(_url)?
-        .apply_token(_token)
-        .apply_root(_dir)
-        .apply_endpoint(_mir);
+pub fn interface(
+    repo: &str, 
+    token: Option<&str>,
+    target: Option<&str>,
+    mirror: Option<&str>,
+    limit: Option<usize>,
+){
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
 
-    let _ = rt.block_on(hfc.download_all());
-    Ok(())
+    let client = HfClient::build(repo)
+        .unwrap()
+        .apply_token(token)
+        .apply_root(target)
+        .apply_endpoint(mirror);
+
+    let _ = rt.block_on(
+        client.download_all(limit)
+    );
 }

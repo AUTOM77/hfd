@@ -3,7 +3,7 @@ name: ci
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   CARGO_TERM_COLOR: always
-  CARGO_LOCA: "hfd-cli/Cargo.toml"
+  CARGO_LOCA: "Cargo.toml"
   CARGO_BIN: "hfd"
 
 permissions:
@@ -15,7 +15,7 @@ on:
     branches:
       - "main"
     paths:
-      - "hfd-cli/Cargo.toml"
+      - "Cargo.toml"
       - ".github/workflows/ci.yml"
 
 jobs:

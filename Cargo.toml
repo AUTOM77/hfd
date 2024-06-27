@@ -1,10 +1,26 @@
-[workspace]
-# members = ["hfd", "hfd-cli"]
-members = ["hfd-cli"]
-resolver = "2"
+
+[package]
+name = "hfd"
+version = "0.3.0"
+edition = "2021"
+
+[dependencies]
+clap = { version= "4.5.4", features=["derive"] }
+reqwest = { version = "0.12.4", default-features = false, features = ["stream", "http2", "json", "rustls-tls"] }
+tokio = { version = "1.37.0", default-features = false, features = ["rt-multi-thread", "fs"] }
+serde_json = { version = "1.0.117", default-features = false, features = ["alloc"] }
+futures = "0.3.30"
+
+[[bin]]
+name = "hfd"
+path = "src/cli.rs"
+
+[lib]
+name = "ld_"
+path = "src/lib.rs"
 
 [profile.release]
-lto = true
+lto = false
 strip = true
 panic = 'abort'
 opt-level = 3
