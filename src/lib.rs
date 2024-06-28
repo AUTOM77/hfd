@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use reqwest::header::{HeaderMap, AUTHORIZATION, CONTENT_RANGE, RANGE, USER_AGENT};
 use tokio::time::Duration;
 use tokio::io::{AsyncSeekExt, SeekFrom};
-use futures::StreamExt;
+use tokio_stream::StreamExt;
 
 const CHUNK_SIZE: usize = 100_000_000;
 const CHUNK_SIZE_XL: usize = 10_000_000_000;
@@ -161,25 +161,19 @@ async fn download(
         .set_len(length as u64)
         .await?;
 
-    let mut tasks = futures::stream::FuturesUnordered::new();
+    let mut tasks = Vec::new();
 
     for s in (0..length).step_by(chunk_size) {
         let e = std::cmp::min(s + chunk_size - 1, length);
-        tasks.push(download_chunk_with_retry(headers.clone(), url.clone(), path.clone(), s, e));
+        tasks.push(
+            tokio::spawn(download_chunk_with_retry(headers.clone(), url.clone(), path.clone(), s, e))
+        );
     }
 
-    while let Some(handle) = tasks.next().await {
-        let res = match handle {
-            Ok(socket) => {
-                socket
-            },
-            Err(e) => {
-                println!("Chunk Error {:#?}", e);
-                std::thread::sleep(Duration::from_millis(10));
-                continue;
-            }
-        };
+    for task in tasks {
+        task.await;
     }
+
     Ok(())
 }
 
@@ -265,28 +259,26 @@ impl HfClient {
         let _ = self.create_dir_all(files.clone());
 
         for chunks in files.chunks(5){
-            let mut tasks = futures::stream::FuturesUnordered::new();
+            let mut tasks = Vec::new();
             for file in chunks{
                 let url = self.hf_url.path(&file);
                 let path = self.root.join(&file);
                 let headers = self.headers.clone();
+
                 if self.hf_url.endpoint.contains("face"){
-                    tasks.push(download(headers, url, path, CHUNK_SIZE));
+                    tasks.push(
+                        download(headers, url, path, CHUNK_SIZE)
+                    );
                 }
                 else {
-                    tasks.push(download(headers, url, path, CHUNK_SIZE_XL));
+                    tasks.push(
+                        download(headers, url, path, CHUNK_SIZE_XL)
+                    );
                 }
             }
 
-            while let Some(handle) = tasks.next().await {
-                let res = match handle {
-                    Ok(socket) => socket,
-                    Err(e) => {
-                        println!("File Error {:#?}", e);
-                        std::thread::sleep(Duration::from_millis(10));
-                        continue;
-                    }
-                };
+            for task in tasks {
+                task.await;
             }
         }
         Ok(())
